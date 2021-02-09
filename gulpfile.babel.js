@@ -7,7 +7,7 @@ import sourcemaps from 'gulp-sourcemaps';
 import imagemin from 'gulp-imagemin';
 import del from 'del';
 import webpack from 'webpack-stream';
-import uglify from 'gulp-uglify';
+import named from 'vinyl-named'; // multiple webpack entry points
 
 const PRODUCTION = yargs.argv.prod;
 const paths = {
@@ -20,7 +20,7 @@ const paths = {
 		dest: 'dist/assets/images'
 	},
 	scripts: {
-		src: 'src/assets/js/bundle.js',
+		src: ['src/assets/js/bundle.js', 'src/assets/js/admin.js'],
 		dest: 'dist/assets/js'
 	},
 	other: {
@@ -52,16 +52,18 @@ export const copy = () => {
 }
 
 export const watch = () => {
-	gulp.watch('src/assests/**/*.scss', styles)
+	gulp.watch('src/assests/scss/**/*.scss', styles)
+	gulp.watch('src/assests/js/**/*.js', scripts)
 	gulp.watch(paths.images.src, images)
 	gulp.watch(paths.other.src, copy)
 }
 
-export const dev = gulp.series(clean, gulp.parallel(styles, images, copy), watch);
-export const build = gulp.series(clean, gulp.parallel(styles, images, copy));
+export const dev = gulp.series(clean, gulp.parallel(styles, scripts, images, copy), watch);
+export const build = gulp.series(clean, gulp.parallel(styles, scripts, images, copy));
 
 export const scripts = () => {
     return gulp.src(paths.scripts.src)
+		.pipe(named())
         .pipe(webpack({
 			module: {
 				rules: [
@@ -77,12 +79,11 @@ export const scripts = () => {
 				]
 			},
 	    output: {
-	        filename: 'bundle.js'
+	        filename: '[name].js'
             },
 	    devtool: !PRODUCTION ? 'inline-source-map' : false,
         mode: PRODUCTION ? 'production' : 'development'
 	}))
-	.pipe(gulpif(PRODUCTION, uglify())) //you can skip this now since mode will already minify
 	.pipe(gulp.dest(paths.scripts.dest));
 }
 
