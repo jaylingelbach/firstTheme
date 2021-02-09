@@ -7,7 +7,8 @@ import sourcemaps from 'gulp-sourcemaps';
 import imagemin from 'gulp-imagemin';
 import del from 'del';
 import webpack from 'webpack-stream';
-import named from 'vinyl-named'; // multiple webpack entry points
+import uglify from 'gulp-uglify';
+import named from 'vinyl-named';
 
 const PRODUCTION = yargs.argv.prod;
 const paths = {
@@ -58,9 +59,6 @@ export const watch = () => {
 	gulp.watch(paths.other.src, copy)
 }
 
-export const dev = gulp.series(clean, gulp.parallel(styles, scripts, images, copy), watch);
-export const build = gulp.series(clean, gulp.parallel(styles, scripts, images, copy));
-
 export const scripts = () => {
     return gulp.src(paths.scripts.src)
 		.pipe(named())
@@ -86,5 +84,8 @@ export const scripts = () => {
 	}))
 	.pipe(gulp.dest(paths.scripts.dest));
 }
+
+export const dev = gulp.series(clean, gulp.parallel(styles, scripts, images, copy), watch);
+export const build = gulp.series(clean, gulp.parallel(styles, scripts, images, copy));
 
 export default dev;
