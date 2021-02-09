@@ -7,6 +7,7 @@ import sourcemaps from 'gulp-sourcemaps';
 import imagemin from 'gulp-imagemin';
 import del from 'del';
 import webpack from 'webpack-stream';
+import uglify from 'gulp-uglify';
 
 const PRODUCTION = yargs.argv.prod;
 const paths = {
@@ -62,26 +63,26 @@ export const build = gulp.series(clean, gulp.parallel(styles, images, copy));
 export const scripts = () => {
     return gulp.src(paths.scripts.src)
         .pipe(webpack({
-            module: {
-                rules: [
-                    {
-		        test: /\.js$/,
-			    use: {
-		                loader: 'babel-loader',
-			        options: {
-				    presets: ['@babel/preset-env'] //or ['babel-preset-env']
-				}
-			    }
-		    }
-		]
-            },
+			module: {
+				rules: [
+					{
+						test: /\.js$/,
+						use: {
+							loader: 'babel-loader',
+							options: {
+								presets: ['@babel/preset-env']
+							}
+						}
+					}
+				]
+			},
 	    output: {
 	        filename: 'bundle.js'
             },
 	    devtool: !PRODUCTION ? 'inline-source-map' : false,
-            mode: PRODUCTION ? 'production' : 'development' //add this
+        mode: PRODUCTION ? 'production' : 'development'
 	}))
-	// .pipe(gulpif(PRODUCTION, uglify())) //you can skip this now since mode will already minify
+	.pipe(gulpif(PRODUCTION, uglify())) //you can skip this now since mode will already minify
 	.pipe(gulp.dest(paths.scripts.dest));
 }
 
