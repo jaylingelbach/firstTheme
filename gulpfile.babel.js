@@ -7,9 +7,10 @@ import sourcemaps from 'gulp-sourcemaps';
 import imagemin from 'gulp-imagemin';
 import del from 'del';
 import webpack from 'webpack-stream';
-import uglify from 'gulp-uglify';
 import named from 'vinyl-named';
+import browserSync from 'browser-sync'; // automatic browers refreshing
 
+const server = browserSync.create();
 const PRODUCTION = yargs.argv.prod;
 const paths = {
 	styles: {
@@ -29,15 +30,20 @@ const paths = {
 		dest: 'dist/assets'
 	}
 }
-export const styles = () => {
-	return gulp.src(paths.styles.src)
-		.pipe(gulpif(!PRODUCTION, sourcemaps.init()))
-		.pipe(sass().on('error', sass.logError))
-		.pipe(gulpif(PRODUCTION, cleanCSS({compatibility: 'ie8'})))
-		.pipe(gulpif(!PRODUCTION, sourcemaps.write()))
-		.pipe(gulp.dest(paths.styles.dest));
+
+// browserSync server initialization
+export const serve = (done) => { 
+	server.init({
+		proxy: 'http://localhost:8888/wordpress/'
+	});
+	done();
 }
 
+// to refresh the browser via browserSync
+export const reload = (done) => {
+	server.reload();
+	done();
+}
 export const clean = (done) => del(['dist']);
 
 
@@ -52,11 +58,14 @@ export const copy = () => {
 	.pipe(gulp.dest(paths.other.dest));
 }
 
-export const watch = () => {
-	gulp.watch('src/assests/scss/**/*.scss', styles)
-	gulp.watch('src/assests/js/**/*.js', scripts)
-	gulp.watch(paths.images.src, images)
-	gulp.watch(paths.other.src, copy)
+export const styles = () => {
+	return gulp.src(paths.styles.src)
+		.pipe(gulpif(!PRODUCTION, sourcemaps.init()))
+		.pipe(sass().on('error', sass.logError))
+		.pipe(gulpif(PRODUCTION, cleanCSS({compatibility: 'ie8'})))
+		.pipe(gulpif(!PRODUCTION, sourcemaps.write()))
+		.pipe(gulp.dest(paths.styles.dest))
+		.pipe(server.stream());
 }
 
 export const scripts = () => {
@@ -85,7 +94,15 @@ export const scripts = () => {
 	.pipe(gulp.dest(paths.scripts.dest));
 }
 
-export const dev = gulp.series(clean, gulp.parallel(styles, scripts, images, copy), watch);
+export const watch = () => {
+	gulp.watch('src/assets/scss/**/*.scss', styles);
+	gulp.watch('src/assets/js/**/*.js', gulp.series(scripts, reload));
+	gulp.watch('**/*.php', reload);
+	gulp.watch(paths.images.src, gulp.series(images, reload));
+	gulp.watch(paths.other.src, gulp.series(copy, reload));
+}
+
+export const dev = gulp.series(clean, gulp.parallel(styles, scripts, images, copy), serve, watch);
 export const build = gulp.series(clean, gulp.parallel(styles, scripts, images, copy));
 
 export default dev;
