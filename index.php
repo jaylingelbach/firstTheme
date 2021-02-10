@@ -7,16 +7,16 @@
                 <a href="<?php the_permalink() ?>" title="<?php the_title_attribute(); ?>"><?php the_title(); ?></a>
             </h2>
         <div>
-            <?php firstTheme_post_meta(); ?>
+            <?php _themeName_post_meta(); ?>
         </div>
         <div>
             <?php the_excerpt(); ?>
         </div>
-            <?php firstTheme_readmore_link(); ?>
+            <?php _themeName_readmore_link(); ?>
         <?php } ?>
             <?php the_posts_pagination() ?>
 <?php } else { ?>
-    <p> <?php esc_html_e('Sorry no posts matched your criteria.', 'firstTheme');?></p> 
+    <p> <?php esc_html_e('Sorry no posts matched your criteria.', '_themeName');?></p> 
 <?php } ?>
 
 <?php get_footer(); ?>

@@ -10,6 +10,8 @@ import webpack from 'webpack-stream';
 import named from 'vinyl-named';
 import browserSync from 'browser-sync'; // automatic browers refreshing
 import zip from 'gulp-zip'; // zip for production
+import replace from 'gulp-replace'; // for boilerplate theme name
+import info from './package.json'; // used in conjunction with gulp-replace
 
 const server = browserSync.create();
 const PRODUCTION = yargs.argv.prod;
@@ -112,7 +114,8 @@ export const watch = () => {
 
 export const compress = () => {
 	return gulp.src(paths.package.src)
-	.pipe(zip('firstTheme.zip'))
+	.pipe(replace('_themeName', info.name))
+	.pipe(zip(`${info.name}.zip`))
 	.pipe(gulp.dest(paths.package.dest));
 }
 export const dev = gulp.series(clean, gulp.parallel(styles, scripts, images, copy), serve, watch);
