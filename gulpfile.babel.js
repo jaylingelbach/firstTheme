@@ -9,6 +9,7 @@ import del from 'del';
 import webpack from 'webpack-stream';
 import named from 'vinyl-named';
 import browserSync from 'browser-sync'; // automatic browers refreshing
+import zip from 'gulp-zip'; // zip for production
 
 const server = browserSync.create();
 const PRODUCTION = yargs.argv.prod;
@@ -26,8 +27,15 @@ const paths = {
 		dest: 'dist/assets/js'
 	},
 	other: {
-		src: ['src/assets/**/*', '!src/assets/{images, js, scss}', '!src/assets/{images, js, scss/**/*}'],
+		src: ['src/assets/**/*', '!src/assets/{images, js, scss}',
+		'!src/assets/{images, js, scss/**/*}'],
 		dest: 'dist/assets'
+	},
+	package: {
+		src: ['**/*', '!node_modules/**', '!.vscode', '!master/**', '!packaged/**', 
+		'!src/**', '!.babelrc', '!.gitignore', '!gulpfile.babel.js',
+		'!package.json', '!package-lock.json'],
+		dest: 'packaged'
 	}
 }
 
@@ -102,7 +110,13 @@ export const watch = () => {
 	gulp.watch(paths.other.src, gulp.series(copy, reload));
 }
 
+export const compress = () => {
+	return gulp.src(paths.package.src)
+	.pipe(zip('firstTheme.zip'))
+	.pipe(gulp.dest(paths.package.dest));
+}
 export const dev = gulp.series(clean, gulp.parallel(styles, scripts, images, copy), serve, watch);
 export const build = gulp.series(clean, gulp.parallel(styles, scripts, images, copy));
+export const bundle = gulp.series(build, compress);
 
 export default dev;
